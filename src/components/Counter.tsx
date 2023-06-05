@@ -44,30 +44,26 @@ interface PremiumResponse {
   nonce: number;
 }
 
+function calculateDaysToUnixDate(unixTimestamp: number ): number{
+  const currentDate = new Date();
+  const targetDate = new Date(unixTimestamp * 1000); // Convert Unix timestamp to milliseconds
 
-function findOrderWithHighestPremium(payingPremium: PremiumData[] | undefined | null): number {
-  if (!payingPremium) {
-    return -1;
-  }
+  // Calculate the time difference in milliseconds
+  const timeDifference = targetDate.getTime() - currentDate.getTime();
 
-  let maxIndex = 0;
-  let maxPremium = 0;
+  // Calculate the number of days
+  const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
 
-  for (let i = 0; i < payingPremium.length; i++) {
-    const order = payingPremium[i].order;
-    const premiumAvailable = payingPremium[i].meta.premiumAvailable;
-
-    if (premiumAvailable !== null && premiumAvailable !== undefined) {
-      const parsedPremium = parseInt(premiumAvailable);
-
-      if (parsedPremium > maxPremium) {
-        maxPremium = parsedPremium;
-        maxIndex = i;
-      }
-    }
-  }
-  return maxIndex;
+  return daysDifference;
 }
+
+function convertUnixToDate(unixTimestamp: number): string {
+  const date = new Date(unixTimestamp * 1000);
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString(undefined, options);
+}
+
+
 
 export function Counter() {
   const [receiverAddress, setReceiverAddress] = useState('');
@@ -150,9 +146,9 @@ export function Counter() {
           //PremiumFilled = (premium * fillAmount)/principal
           let chosenOrder = orderBook?.payingPremium[0];
           let premiumAvailable = chosenOrder?.meta?.premiumAvailable;
-          let principalAvailable = chosenOrder?.meta?.principalAvailable; 
-          console.log(Number(principalAvailable))
-          let amountStake = (Number(principalAvailable ?? 0) * (Number(amountToGift)) / Number(premiumAvailable ?? 1));
+          let principalAvailable = chosenOrder?.meta?.principalAvailable;   
+          let amountStake = (Number(principalAvailable ?? 90) * (Number(amountToGift))) / Number(premiumAvailable ?? 1);
+          console.log(Number(amountStake))
           setCompletionDate(chosenOrder?.order.maturity ?? '');
           setStakingAmount(Number(amountStake));  
         }}
@@ -173,7 +169,7 @@ export function Counter() {
         Sender should stake: <span className="font-semibold">{stakingAmount}</span>
       </p>
       <p>
-        Completion date: <span className="font-semibold">{completionDate}</span>
+        Completion date: <span className="font-semibold">{String(convertUnixToDate(Number(completionDate)))}</span>
       </p>
       <p>
         Reward amount: <span className="font-semibold">{rewardAmount}</span>
