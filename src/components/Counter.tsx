@@ -45,6 +45,30 @@ interface PremiumResponse {
 }
 
 
+function findOrderWithHighestPremium(payingPremium: PremiumData[] | undefined | null): number {
+  if (!payingPremium) {
+    return -1;
+  }
+
+  let maxIndex = 0;
+  let maxPremium = 0;
+
+  for (let i = 0; i < payingPremium.length; i++) {
+    const order = payingPremium[i].order;
+    const premiumAvailable = payingPremium[i].meta.premiumAvailable;
+
+    if (premiumAvailable !== null && premiumAvailable !== undefined) {
+      const parsedPremium = parseInt(premiumAvailable);
+
+      if (parsedPremium > maxPremium) {
+        maxPremium = parsedPremium;
+        maxIndex = i;
+      }
+    }
+  }
+  return maxIndex;
+}
+
 export function Counter() {
   const [receiverAddress, setReceiverAddress] = useState('');
   const [amountToGift, setAmountToGift] = useState('');
@@ -52,8 +76,8 @@ export function Counter() {
   const [completionDate, setCompletionDate] = useState('');
   const [rewardAmount, setRewardAmount] = useState(0);
   const [market, setMarket] = useState<Market[]>([]);
-  const [orderBook, setOrderBook] = useState<PremiumResponse>([]);
-  
+  const [orderBook, setOrderBook] = useState<PremiumResponse>();
+  let chosenOrderIndex = -1
   
   useEffect(() => {
     // Fetch active markets
@@ -69,17 +93,20 @@ export function Counter() {
 
     // Fetch order book
     fetch(
-      'https://api-v3-dev.swivel.exchange/v3/orderbook?protocol=1&underlying=0x07865c6E87B9F70255377e024ace6630C1Eaa37F&maturity=1688081200'
-    )
+      'https://api-v3-dev.swivel.exchange/v3/orderbook?protocol=1&underlying=0x07865c6E87B9F70255377e024ace6630C1Eaa37F&maturity=1696112940'
+      )
       .then((response) => response.json())
       .then((data: PremiumResponse) => {
         setOrderBook(data);
-        console.log(data.payingPremium); // Test output for order book
+        //chosenOrderIndex = findOrderWithHighestPremium(orderBook?.payingPremium)// Test output for order book
+        console.log(data.payingPremium[1]); 
       })
       .catch((error) => {
         console.error('Error fetching order book:', error);
       });
   }, []);
+
+
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,10 +145,16 @@ export function Counter() {
         id="amountToGift"
         className="w-full border border-gray-300 rounded px-3 py-2"
         value={amountToGift}
-        onChange={(e) => {setAmountToGift(e.target.value)
-        setStakingAmount(10000)
-
-        
+        onChange={(e) => {
+          setAmountToGift(e.target.value);
+          //PremiumFilled = (premium * fillAmount)/principal
+          let chosenOrder = orderBook?.payingPremium[0];
+          let premiumAvailable = chosenOrder?.meta?.premiumAvailable;
+          let principalAvailable = chosenOrder?.meta?.principalAvailable; 
+          console.log(Number(principalAvailable))
+          let amountStake = (Number(principalAvailable ?? 0) * (Number(amountToGift)) / Number(premiumAvailable ?? 1));
+          setCompletionDate(chosenOrder?.order.maturity ?? '');
+          setStakingAmount(Number(amountStake));  
         }}
         required
       />
