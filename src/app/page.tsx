@@ -1,15 +1,14 @@
-import { Account } from '../components/Account'
-import { Connect } from '../components/Connect'
-import { Connected } from '../components/Connected'
-import { Counter } from '../components/Counter'
-import { NetworkSwitcher } from '../components/NetworkSwitcher'
+import { Button } from "react-daisyui";
+import { Account } from "../components/Account";
+import { Connect } from "../components/Connect";
+import { Connected } from "../components/Connected";
+import { Counter } from "../components/Counter";
+import { NetworkSwitcher } from "../components/NetworkSwitcher";
 
 export function Page() {
   return (
     <>
       <h1>wagmi + Next.js + Foundry</h1>
-
-      <Connect />
 
       <Connected>
         <Account />
@@ -19,7 +18,7 @@ export function Page() {
         <NetworkSwitcher />
       </Connected>
     </>
-  )
+  );
 }
 
-export default Page
+export default Page;
