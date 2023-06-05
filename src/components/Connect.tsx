@@ -3,6 +3,7 @@
 import { BaseError } from "viem";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Button, Card } from "react-daisyui";
+import { Account } from "./Account";
 
 export function Connect() {
   const { connector, isConnected } = useAccount();
@@ -15,7 +16,7 @@ export function Connect() {
       <div>
         {isConnected && (
           <Button className="btn btn-primary" onClick={() => disconnect()}>
-            Disconnect from {connector?.name}
+            Disconnect from <Account />
           </Button>
         )}
 
