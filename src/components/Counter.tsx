@@ -71,6 +71,7 @@ export function Counter() {
   const [receiverAddress, setReceiverAddress] = useState("");
   const [amountToGift, setAmountToGift] = useState("");
   const [stakingAmount, setStakingAmount] = useState(0);
+  const [rewardAPR, setRewardAPR] = useState(0);
   const [completionDate, setCompletionDate] = useState("");
   const [rewardAmount, setRewardAmount] = useState(0);
   const [market, setMarket] = useState<Market[]>([]);
@@ -128,7 +129,6 @@ export function Counter() {
     const stakingAmount = parseFloat(amountToGift) * 0.1; // 10% of amount to gift
     const completionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
     const rewardAmount = stakingAmount * 1.2; // 120% of staking amount
-
     setStakingAmount(stakingAmount);
     setCompletionDate(completionDate.toDateString());
     setRewardAmount(rewardAmount);
@@ -182,9 +182,17 @@ export function Counter() {
               let chosenOrder = orderBook?.payingPremium[0];
               let premiumAvailable = chosenOrder?.meta?.premiumAvailable;
               let principalAvailable = chosenOrder?.meta?.principalAvailable;
-              let amountStake =
-                (Number(principalAvailable ?? 90) * Number(amountToGift)) /
-                Number(premiumAvailable ?? 1);
+              let amountStake =Number(e.target.value)/
+                (Number(premiumAvailable ?? 1) /
+                Number(principalAvailable ?? 1)); 
+              console.log(amountToGift);
+              console.log(Number(amountToGift));
+              console.log(principalAvailable);
+              console.log(Number(principalAvailable));
+              console.log(premiumAvailable)
+              console.log(Number(premiumAvailable));
+              setRewardAPR(100*(Number(premiumAvailable ?? 1)/Number(principalAvailable ?? 90))*(365/calculateDaysToUnixDate(Number(chosenOrder?.order.maturity ?? '0'))))
+          
               console.log(Number(amountStake));
               setCompletionDate(chosenOrder?.order.maturity ?? "");
               setStakingAmount(Number(amountStake));
@@ -214,6 +222,9 @@ export function Counter() {
           </p>
           <p>
             Reward amount: <span className="font-semibold">{rewardAmount}</span>
+          </p>
+          <p>
+            Reward APR: <span className="font-semibold">{rewardAPR + '%'}</span>
           </p>
         </div>
       )}
