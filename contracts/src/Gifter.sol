@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 //import "./Swivel.sol"; // Import the Swivel contract
 
-struct  Order {
+struct Order {
     bytes32 key;
     uint8 protocol;
     address maker;
@@ -25,20 +25,30 @@ struct Components {
 }
 
 interface ISwivel {
-    function redeemZcToken( uint8 p, address u, uint256 m, uint256 a) external returns (bool);
-    function initiate(Order[] memory order, uint256[] memory amount, Components[] memory components) external returns (bool);
+    function redeemZcToken(
+        uint8 p,
+        address u,
+        uint256 m,
+        uint256 a
+    ) external returns (bool);
+
+    function initiate(
+        Order[] memory order,
+        uint256[] memory amount,
+        Components[] memory components
+    ) external returns (bool);
 }
 
 struct Market {
-        address cTokenAddr;
-        address zcToken;
-        address vaultTracker;
-        uint256 maturityRate;
-    }
+    address cTokenAddr;
+    address zcToken;
+    address vaultTracker;
+    uint256 maturityRate;
+}
 
 contract MyContract {
     using SafeERC20 for IERC20;
-    
+
     ISwivel public swivel;
     address public owner;
 
@@ -50,8 +60,8 @@ contract MyContract {
     // address is recipient address
     // string is maturity date
     // uint256 is amount
-    mapping(address =>  mapping (uint256 => uint256)) public deposits;
-    
+    mapping(address => mapping(uint256 => uint256)) public deposits;
+
     bool private locked;
 
     modifier noReentry() {
@@ -61,38 +71,39 @@ contract MyContract {
         locked = false;
     }
 
-    
-
     function deposit(
-    Order[] memory order,
-    uint256[] memory amount,
-    Components[] memory signature,
-    uint8 senderShare,
-    address receiver,
-    uint256 maturityDate
-    ) 
+        Order[] memory order,
+        uint256[] memory amount,
+        Components[] memory signature,
+        uint8 senderShare,
+        address receiver,
+        uint256 maturityDate
+    ) public noReentry {
+        IERC20 token = IERC20(order[0].underlying);
 
-    public noReentry {
-    IERC20 token = IERC20(order[0].underlying);
+        uint256 initialBalance = token.balanceOf(address(this));
 
-    uint256 initialBalance = token.balanceOf(address(this));
+        require(
+            token.transferFrom(msg.sender, address(this), amount[0]),
+            "Transfer failed"
+        );
+        token.approve(address(swivel), amount[0]);
+        swivel.initiate(order, amount, signature); // Call the deposit function on Swivel
 
-    require(token.transferFrom(msg.sender, address(this), amount[0]), "Transfer failed");
-    token.approve(address(swivel), amount[0]);
-    swivel.initiate(order, amount, signature); // Call the deposit function on Swivel
+        uint256 finalBalance = token.balanceOf(address(this));
+        require(
+            finalBalance >= initialBalance,
+            "Final balance is less than initial balance"
+        );
 
-    uint256 finalBalance = token.balanceOf(address(this));
-    require(finalBalance >= initialBalance, "Final balance is less than initial balance");
+        uint256 difference = finalBalance - initialBalance;
+        if (difference > 0) {
+            token.transfer(msg.sender, difference * senderShare);
+            token.transfer(receiver, difference * (1 - senderShare));
+        }
 
-    uint256 difference = finalBalance - initialBalance;
-    if (difference > 0) {
-        token.transfer(msg.sender, difference * senderShare);
-        token.transfer(receiver, difference * (1 - senderShare));
-    }
-
-    // Store depositor
-    deposits[msg.sender][maturityDate] = amount[0];
-
+        // Store depositor
+        deposits[msg.sender][maturityDate] = amount[0];
     }
 
     function withdraw(
@@ -101,7 +112,6 @@ contract MyContract {
         uint256 _maturityDate,
         address underlyingToken
     ) public noReentry {
-
         uint256 amount = deposits[msg.sender][_maturityDate];
         // require(amount > 0, "No deposit for the given maturity date");
         // require(block.timestamp >= stringToTimestamp(_maturityDate), "Maturity date has not been reached");
@@ -114,13 +124,16 @@ contract MyContract {
         );
 
         uint256 finalBalance = _token.balanceOf(address(this));
-        require(finalBalance >= initialBalance, "Final balance is less than initial balance");
+        require(
+            finalBalance >= initialBalance,
+            "Final balance is less than initial balance"
+        );
 
         uint256 difference = finalBalance - initialBalance;
         if (difference > 0) {
             _token.transfer(msg.sender, difference);
-    // Remove the deposit information
-    delete deposits[msg.sender][_maturityDate];
-    }
+            // Remove the deposit information
+            delete deposits[msg.sender][_maturityDate];
+        }
     }
 }
