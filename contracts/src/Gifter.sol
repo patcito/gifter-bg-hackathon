@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 //import "./Swivel.sol"; // Import the Swivel contract
 
-struct Order {
+struct  Order {
     bytes32 key;
     uint8 protocol;
     address maker;
@@ -25,9 +25,8 @@ struct Components {
 }
 
 interface ISwivel {
-    function deposit(uint8 p, address u, address c, uint256 a) external returns (bool);
     function withdraw(uint8 p, address u, address c, uint256 a) external returns (bool);
-    function initiate(Order order, uint256[] amount, Components[] components) external returns (bool));
+    function initiate(Order memory order, uint256[] memory amount, Components[] memory components) external returns (bool);
 }
 
 
