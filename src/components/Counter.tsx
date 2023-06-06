@@ -292,8 +292,8 @@ export function Counter() {
               let x = premiumAvailable.div(principalAvailable);
 
               let amountStake = bnValue
-                .mul(10 ** 10)
-                .div(premiumAvailable.mul(10 ** 5).div(principalAvailable));
+                .mul(10 ** 12)
+                .div(premiumAvailable.mul(10 ** 6).div(principalAvailable));
               console.log(amountToGift);
               console.log(Number(amountToGift));
               console.log(principalAvailable);
@@ -301,7 +301,7 @@ export function Counter() {
               console.log(premiumAvailable);
               console.log(Number(premiumAvailable));
               const reward = BigNumber.from(premiumAvailable ?? "1")
-                .mul(10 ** 10)
+                .mul(10 ** 12)
                 .div(principalAvailable ?? 90)
                 .mul(
                   BigNumber.from(365).div(
@@ -337,7 +337,7 @@ export function Counter() {
           <p>
             Sender should stake:{" "}
             <span className="font-semibold">
-              {(Number(stakingAmount) / 10 ** 5).toString()}
+              {(Number(stakingAmount) / 10 ** 6).toString()}
             </span>
           </p>
           <p>
