@@ -5,8 +5,6 @@ import { useNetwork, useWaitForTransaction } from "wagmi";
 import { useGifterDeposit, usePrepareGifterDeposit } from "../generated";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { hexToNumber, hexToString } from "viem";
-import Big from "big.js";
-
 import {
   BigNumber,
   FixedFormat,
@@ -236,29 +234,30 @@ export function Counter() {
             className="w-full border border-gray-300 rounded px-3 py-2"
             value={amountToGift.toString()}
             onChange={(e) => {
-              const bnValue = Big(e.target.value);
-              setAmountToGift(BigInt(bnValue.toNumber()));
+              const bnValue = BigNumber.from(e.target.value);
+              setAmountToGift(bnValue.toBigInt());
               //PremiumFilled = (premium * fillAmount)/principal
               let chosenOrder = orderBook?.payingPremium[0];
-              let premiumAvailable = Big(
-                chosenOrder?.meta?.premiumAvailable.toString() || 0
+              let premiumAvailable = BigNumber.from(
+                chosenOrder?.meta?.premiumAvailable
               );
+
               console.log("premium", premiumAvailable);
-              let principalAvailable = Big(
-                chosenOrder?.meta?.principalAvailable.toString() || 0
+              let principalAvailable = BigNumber.from(
+                chosenOrder?.meta?.principalAvailable
               );
 
               console.log("principal", principalAvailable);
-              alert(
+              /*alert(
                 "amountStake: " +
                   bnValue +
                   " pa: " +
                   premiumAvailable +
                   " pra: " +
                   principalAvailable
-              );
+              );*/
               let x = premiumAvailable.div(principalAvailable);
-              alert(x);
+
               let amountStake = bnValue.div(
                 premiumAvailable.div(principalAvailable)
               );
@@ -268,20 +267,30 @@ export function Counter() {
               console.log(Number(principalAvailable));
               console.log(premiumAvailable);
               console.log(Number(premiumAvailable));
-              const reward = Big(premiumAvailable ?? 1)
+              const reward = BigNumber.from(premiumAvailable ?? 1)
                 .mul(100)
                 .div(principalAvailable ?? 90)
                 .mul(
-                  Big(365).div(
+                  BigNumber.from(365).div(
                     calculateDaysToUnixDate(
                       Number(chosenOrder?.order.maturity ?? "0")
                     )
                   )
                 );
-              setRewardAPR(BigInt(reward.toString()));
+              setRewardAPR(
+                reward.toBigInt()
+                /*100 *
+                  (Number(premiumAvailable ?? 1) /
+                    Number(principalAvailable ?? 90)) *
+                  (365 /
+                    calculateDaysToUnixDate(
+                      Number(chosenOrder?.order.maturity ?? "0")
+                    ))
+                )*/
+              );
               console.log(amountStake);
               console.log("maturity", chosenOrder?.order.maturity);
-              setStakingAmount(BigInt(amountStake.toString()));
+              setStakingAmount(amountStake.toBigInt());
               setCompletionDate(BigInt(chosenOrder?.order.maturity || 0));
             }}
             required
