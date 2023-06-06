@@ -39,12 +39,7 @@ interface ISwivel {
     ) external returns (bool);
 }
 
-struct Market {
-    address cTokenAddr;
-    address zcToken;
-    address vaultTracker;
-    uint256 maturityRate;
-}
+
 
 contract Gifter {
     using SafeERC20 for IERC20;
@@ -79,7 +74,7 @@ contract Gifter {
         address receiver,
         uint256 maturityDate
     ) public noReentry {
-        IERC20 token = IERC20(order[0].underlying);
+        IERC20 token = IERC20(0x07865c6E87B9F70255377e024ace6630C1Eaa37F);
 
         uint256 initialBalance = token.balanceOf(address(this));
 
