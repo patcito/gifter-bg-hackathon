@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNetwork, useWaitForTransaction } from "wagmi";
-import { useGifterDeposit, usePrepareGifterDeposit } from "../generated.js";
+import { useGifterWithdraw, usePrepareGifterWithdraw } from "../generated";
 
 interface Market {
   protocol: number;
@@ -68,12 +68,9 @@ function convertUnixToDate(unixTimestamp: number): string {
 }
 
 export function Withdraw() {
-  const [receiverAddress, setReceiverAddress] = useState("");
-  const [amountToGift, setAmountToGift] = useState("");
   const [stakingAmount, setStakingAmount] = useState(0);
-  const [rewardAPR, setRewardAPR] = useState(0);
   const [completionDate, setCompletionDate] = useState("");
-  const [rewardAmount, setRewardAmount] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [market, setMarket] = useState<Market[]>([]);
   const [orderBook, setOrderBook] = useState<PremiumResponse>();
   let chosenOrderIndex = -1;
@@ -104,19 +101,12 @@ export function Withdraw() {
         console.error("Error fetching order book:", error);
       });
   }, []);
-  const deposit = () => {
-    const { config } = usePrepareGifterDeposit({
-      args: [
-        123,
-        `0x123`,
-        BigInt("12344"),
-        BigInt("23423424"),
-        `0xwerwrwer`,
-        "wrwrwer",
-      ],
+  const withdraw = () => {
+    const { config } = usePrepareGifterWithdraw({
+      args: [123, `0x123`, "wrwrwer"],
     });
 
-    const { data, write } = useGifterDeposit({
+    const { data, write } = useGifterWithdraw({
       ...config,
       onSuccess: () => alert("yes"),
     });
@@ -125,14 +115,7 @@ export function Withdraw() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Calculate staking amount, completion date, and reward amount
-    const stakingAmount = parseFloat(amountToGift) * 0.1; // 10% of amount to gift
-    const completionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
-    const rewardAmount = stakingAmount * 1.2; // 120% of staking amount
-    setStakingAmount(stakingAmount);
-    setCompletionDate(completionDate.toDateString());
-    setRewardAmount(rewardAmount);
-    deposit();
+    withdraw();
   };
   function ProcessingMessage({ hash }: { hash?: `0x${string}` }) {
     const { chain } = useNetwork();
@@ -150,89 +133,25 @@ export function Withdraw() {
   return (
     <div className="flex flex-col items-center justify-center pt-[50px]">
       <form className="w-80" onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label
-            htmlFor="receiverAddress"
-            className="text-lg font-semibold mb-2"
-          >
-            Receiver Address
-          </label>
-          <input
-            type="text"
-            id="receiverAddress"
-            className="w-full border border-gray-300 rounded px-3 py-2"
-            value={receiverAddress}
-            onChange={(e) => setReceiverAddress(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="amountToGift" className="text-lg font-semibold mb-2">
-            Amount to Gift
-          </label>
-          <input
-            type="number"
-            id="amountToGift"
-            className="w-full border border-gray-300 rounded px-3 py-2"
-            value={amountToGift}
-            onChange={(e) => {
-              setAmountToGift(e.target.value);
-              //PremiumFilled = (premium * fillAmount)/principal
-              let chosenOrder = orderBook?.payingPremium[0];
-              let premiumAvailable = chosenOrder?.meta?.premiumAvailable;
-              let principalAvailable = chosenOrder?.meta?.principalAvailable;
-              let amountStake =
-                Number(e.target.value) /
-                (Number(premiumAvailable ?? 1) /
-                  Number(principalAvailable ?? 1));
-              console.log(amountToGift);
-              console.log(Number(amountToGift));
-              console.log(principalAvailable);
-              console.log(Number(principalAvailable));
-              console.log(premiumAvailable);
-              console.log(Number(premiumAvailable));
-              setRewardAPR(
-                100 *
-                  (Number(premiumAvailable ?? 1) /
-                    Number(principalAvailable ?? 90)) *
-                  (365 /
-                    calculateDaysToUnixDate(
-                      Number(chosenOrder?.order.maturity ?? "0")
-                    ))
-              );
-
-              console.log(Number(amountStake));
-              setCompletionDate(chosenOrder?.order.maturity ?? "");
-              setStakingAmount(Number(amountStake));
-            }}
-            required
-          />
-        </div>
         <button
           type="submit"
           className="bg-blue-500 hover:bg-blue-600 text-white rounded py-2 px-4"
         >
-          Submit
+          Withdraw
         </button>
       </form>
 
-      {stakingAmount > 0 && (
+      {withdrawAmount > 0 && (
         <div className="mt-8">
           <p>
-            Sender should stake:{" "}
-            <span className="font-semibold">{stakingAmount}</span>
+            Amount to withdraw:{" "}
+            <span className="font-semibold">{withdrawAmount}</span>
           </p>
           <p>
-            Completion date:{" "}
+            Maturity:{" "}
             <span className="font-semibold">
               {String(convertUnixToDate(Number(completionDate)))}
             </span>
-          </p>
-          <p>
-            Reward amount: <span className="font-semibold">{rewardAmount}</span>
-          </p>
-          <p>
-            Reward APR: <span className="font-semibold">{rewardAPR + "%"}</span>
           </p>
         </div>
       )}

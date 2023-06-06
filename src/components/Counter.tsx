@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNetwork, useWaitForTransaction } from "wagmi";
-import { useGifterDeposit, usePrepareGifterDeposit } from "../generated.ts";
+import { useGifterDeposit, usePrepareGifterDeposit } from "../generated";
 
 interface Market {
   protocol: number;
@@ -132,13 +132,12 @@ export function Counter() {
     setStakingAmount(stakingAmount);
     setCompletionDate(completionDate.toDateString());
     setRewardAmount(rewardAmount);
+    deposit();
   };
   function ProcessingMessage({ hash }: { hash?: `0x${string}` }) {
     const { chain } = useNetwork();
     const etherscan = chain?.blockExplorers?.etherscan;
-    const { config } = usePrepareGifterDeposit({
-      args: [],
-    });
+
     return (
       <span>
         Processing transaction...{" "}

@@ -2,10 +2,10 @@ import { Button } from "react-daisyui";
 import { Account } from "../../components/Account";
 import { Connect } from "../../components/Connect";
 import { Connected } from "../../components/Connected";
-import { Withdraw } from "../../components/Withdraw";
 import { NetworkSwitcher } from "../../components/NetworkSwitcher";
+import { Withdraw } from "../../components/Withdraw";
 
-export function Withdraw() {
+export function WithdrawPage() {
   return (
     <>
       <Connected>
@@ -16,4 +16,4 @@ export function Withdraw() {
   );
 }
 
-export default Withdraw;
+export default WithdrawPage;
