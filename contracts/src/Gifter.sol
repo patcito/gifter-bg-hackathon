@@ -46,7 +46,7 @@ struct Market {
     uint256 maturityRate;
 }
 
-contract MyContract {
+contract Gifter {
     using SafeERC20 for IERC20;
 
     ISwivel public swivel;

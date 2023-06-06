@@ -18,7 +18,7 @@ import { log } from "console";
 interface Market {
   protocol: number;
   underlying: string;
-  maturity: string;
+  maturity: bigint;
 }
 
 interface PremiumOrder {
@@ -234,7 +234,10 @@ export function Counter() {
             className="w-full border border-gray-300 rounded px-3 py-2"
             value={amountToGift.toString()}
             onChange={(e) => {
-              const bnValue = BigNumber.from(e.target.value);
+              if (e.target.value == '') {
+                e.target.value = '0';
+              }
+              const bnValue = BigNumber.from(String(e.target.value ?? '0') );
               setAmountToGift(bnValue.toBigInt());
               //PremiumFilled = (premium * fillAmount)/principal
               let chosenOrder = orderBook?.payingPremium[0];
@@ -258,17 +261,16 @@ export function Counter() {
               );*/
               let x = premiumAvailable.div(principalAvailable);
 
-              let amountStake = bnValue.div(
-                premiumAvailable.div(principalAvailable)
-              );
+              let amountStake = bnValue.mul(10**10).div(
+                (premiumAvailable.mul(10**5).div(principalAvailable)));
               console.log(amountToGift);
               console.log(Number(amountToGift));
               console.log(principalAvailable);
               console.log(Number(principalAvailable));
               console.log(premiumAvailable);
               console.log(Number(premiumAvailable));
-              const reward = BigNumber.from(premiumAvailable ?? 1)
-                .mul(100)
+              const reward = BigNumber.from(premiumAvailable ?? '1')
+                .mul(10**10)
                 .div(principalAvailable ?? 90)
                 .mul(
                   BigNumber.from(365).div(
@@ -277,7 +279,7 @@ export function Counter() {
                     )
                   )
                 );
-              setRewardAPR(
+              /*setRewardAPR(
                 reward.toBigInt()
                 /*100 *
                   (Number(premiumAvailable ?? 1) /
@@ -286,8 +288,8 @@ export function Counter() {
                     calculateDaysToUnixDate(
                       Number(chosenOrder?.order.maturity ?? "0")
                     ))
-                )*/
-              );
+                )
+              );*/
               console.log(amountStake);
               console.log("maturity", chosenOrder?.order.maturity);
               setStakingAmount(amountStake.toBigInt());
@@ -308,7 +310,7 @@ export function Counter() {
         <div className="mt-8">
           <p>
             Sender should stake:{" "}
-            <span className="font-semibold">{stakingAmount.toString()}</span>
+            <span className="font-semibold">{((Number(stakingAmount)/(10**5)).toString())}</span>
           </p>
           <p>
             Completion date:{" "}
