@@ -26,7 +26,7 @@ struct Components {
 
 interface ISwivel {
     function withdraw(uint8 p, address u, address c, uint256 a) external returns (bool);
-    function initiate(Order memory order, uint256[] memory amount, Components[] memory components) external returns (bool);
+    function initiate(Order[] memory order, uint256[] memory amount, Components[] memory components) external returns (bool);
 }
 
 
@@ -60,7 +60,7 @@ contract MyContract {
     function deposit(
     Order[] memory order,
     uint256[] memory amount,
-    Components memory signature,
+    Components[] memory signature,
     uint8 senderShare,
     address receiver,
     string memory maturityDate
@@ -71,9 +71,9 @@ contract MyContract {
 
     uint256 initialBalance = token.balanceOf(address(this));
 
-    require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
-    token.approve(address(swivel), amount);
-    swivel.initiate(order, [amount], signature); // Call the deposit function on Swivel
+    require(token.transferFrom(msg.sender, address(this), amount[0]), "Transfer failed");
+    token.approve(address(swivel), amount[0]);
+    swivel.initiate(order, amount, signature); // Call the deposit function on Swivel
 
     uint256 finalBalance = token.balanceOf(address(this));
     require(finalBalance >= initialBalance, "Final balance is less than initial balance");
@@ -85,7 +85,7 @@ contract MyContract {
     }
 
     // Store depositor
-    deposits[msg.sender][maturityDate] = amount;
+    deposits[msg.sender][maturityDate] = amount[0];
 }
 
 
