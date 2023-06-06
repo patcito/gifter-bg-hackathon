@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/Gifter.sol";
 
-contract CounterTest is Test {
+contract GifterTest is Test {
     function setUp() public {
         //  counter = new Counter();
         //  counter.setNumber(0);
