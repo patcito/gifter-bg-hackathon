@@ -23,7 +23,9 @@ import {
 
   // Types
 } from "@ethersproject/bignumber";
+import { splitSignature } from "@ethersproject/bytes";
 import { log } from "console";
+import { ethers } from "ethers";
 interface Market {
   protocol: number;
   underlying: string;
@@ -131,7 +133,7 @@ export function Counter() {
   const Approved = () => {
     if (!address) return <></>;
     console.log(address);
-    const { config } = useContractRead({
+    useContractRead({
       address: "0x07865c6E87B9F70255377e024ace6630C1Eaa37F",
       abi: erc20ABI,
       functionName: "allowance",
@@ -202,15 +204,13 @@ export function Counter() {
       });
   }, []);
   const Deposit = () => {
-    const order = orderBook?.receivingPremium[0].order;
-    const meta = orderBook?.receivingPremium[0].meta;
+    const order = orderBook?.payingPremium[0].order;
+    const meta = orderBook?.payingPremium[0].meta;
     if (!order) return <></>;
     if (!meta) return <></>;
-    const signatureHex = meta.signature;
-    const { r, s } = secp256k1.Signature.fromCompact(
-      signatureHex.slice(2, 130)
-    );
-    const v = hexToNumber(`0x${signatureHex.slice(130)}`);
+    const split = splitSignature(meta.signature);
+    console.log(split);
+
     const { config } = usePrepareGifterDeposit({
       address: CONTRACT,
       args: [
@@ -218,9 +218,11 @@ export function Counter() {
         [stakingAmount],
         [
           {
-            v,
-            r: `0x${dec2hex(r.toString())}`,
-            s: `0x${dec2hex(s.toString())}`,
+            v: split.v,
+            //@ts-ignore
+            r: `${split.r}`,
+            //@ts-ignore
+            s: `${split.s}`,
           },
         ],
         0,
