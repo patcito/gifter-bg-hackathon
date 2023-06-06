@@ -132,7 +132,7 @@ export function Counter() {
     if (!address) return <></>;
     console.log(address);
     const { config } = useContractRead({
-      address: "0xd35CCeEAD182dcee0F148EbaC9447DA2c4D449c4",
+      address: "0x07865c6E87B9F70255377e024ace6630C1Eaa37F",
       abi: erc20ABI,
       functionName: "allowance",
       args: [address, CONTRACT],
@@ -153,7 +153,7 @@ export function Counter() {
     if (!props.address) return <></>;
     if (props.stakingAmount <= 0) return <></>;
     const { config } = usePrepareContractWrite({
-      address: "0xd35CCeEAD182dcee0F148EbaC9447DA2c4D449c4",
+      address: "0x07865c6E87B9F70255377e024ace6630C1Eaa37F",
       abi: erc20ABI,
       functionName: "approve",
       args: [CONTRACT, props.stakingAmount],
@@ -215,7 +215,7 @@ export function Counter() {
       address: CONTRACT,
       args: [
         [order],
-        [BigInt(0)],
+        [stakingAmount],
         [
           {
             v,
