@@ -9,6 +9,7 @@ import {
   usePrepareContractWrite,
   useContractWrite,
   useAccount,
+  useContractRead,
 } from "wagmi";
 import { useGifterDeposit, usePrepareGifterDeposit } from "../generated";
 import { secp256k1 } from "@noble/curves/secp256k1";
@@ -113,26 +114,7 @@ interface ApproveTokenProps {
   stakingAmount: bigint;
   address: `0x${string}` | undefined;
 }
-export function ApproveToken(props: ApproveTokenProps) {
-  if (!props.address) return <></>;
-  if (props.stakingAmount <= 0) return <></>;
-  const { config } = usePrepareContractWrite({
-    address: "0xd35CCeEAD182dcee0F148EbaC9447DA2c4D449c4",
-    abi: erc20ABI,
-    functionName: "approve",
-    args: [props.address, props.stakingAmount],
-  });
-  const { write } = useContractWrite(config);
-  return (
-    <button
-      type="submit"
-      className="bg-blue-500 hover:bg-blue-600 text-white rounded py-2 px-4"
-      onClick={() => write?.()}
-    >
-      Submit
-    </button>
-  );
-}
+
 export function Counter() {
   const [receiverAddress, setReceiverAddress] = useState<`0x${string}`>("0x");
   const [amountToGift, setAmountToGift] = useState(BigInt(0));
@@ -143,10 +125,56 @@ export function Counter() {
   const [market, setMarket] = useState<Market[]>([]);
   const [orderBook, setOrderBook] = useState<PremiumResponse>();
   const [submitted, setSubmitted] = useState(false);
-
+  const [approved, setApproved] = useState(false);
   const { address } = useAccount();
   let chosenOrderIndex = -1;
+  const Approved = () => {
+    if (!address) return <></>;
+    console.log(address);
+    const { config } = useContractRead({
+      address: "0xd35CCeEAD182dcee0F148EbaC9447DA2c4D449c4",
+      abi: erc20ABI,
+      functionName: "allowance",
+      args: [address, CONTRACT],
+      onSuccess(data) {
+        console.log("data", data);
 
+        if (data.valueOf() >= stakingAmount) {
+          setApproved(true);
+        } else {
+          setApproved(false);
+        }
+      },
+    });
+
+    return <>{approved ? <Deposit /> : null} </>;
+  };
+  function ApproveToken(props: ApproveTokenProps) {
+    if (!props.address) return <></>;
+    if (props.stakingAmount <= 0) return <></>;
+    const { config } = usePrepareContractWrite({
+      address: "0xd35CCeEAD182dcee0F148EbaC9447DA2c4D449c4",
+      abi: erc20ABI,
+      functionName: "approve",
+      args: [CONTRACT, props.stakingAmount],
+    });
+    const { data, write } = useContractWrite({
+      ...config,
+      onSuccess: () => {
+        console.log(data);
+        setApproved(true);
+      },
+    });
+    return (
+      <button
+        type="submit"
+        className="bg-blue-500 hover:bg-blue-600 text-white rounded py-2 px-4"
+        onClick={() => write?.()}
+      >
+        Approve
+      </button>
+    );
+  }
   useEffect(() => {
     // Fetch active markets
     fetch("https://api-v3-dev.swivel.exchange/v3/markets?status=active")
@@ -174,7 +202,6 @@ export function Counter() {
       });
   }, []);
   const Deposit = () => {
-    return <div></div>;
     const order = orderBook?.receivingPremium[0].order;
     const meta = orderBook?.receivingPremium[0].meta;
     if (!order) return <></>;
@@ -184,12 +211,11 @@ export function Counter() {
       signatureHex.slice(2, 130)
     );
     const v = hexToNumber(`0x${signatureHex.slice(130)}`);
-
     const { config } = usePrepareGifterDeposit({
       address: CONTRACT,
       args: [
         [order],
-        [stakingAmount],
+        [BigInt(0)],
         [
           {
             v,
@@ -207,9 +233,21 @@ export function Counter() {
       ...config,
       onSuccess: () => {
         console.log(data);
-        alert("yes");
+      },
+      onError(error, variables, context) {
+        alert();
+        console.log(error, variables, context);
       },
     });
+    return (
+      <button
+        type="submit"
+        className="bg-blue-500 hover:bg-blue-600 text-white rounded py-2 px-4"
+        onClick={() => write?.()}
+      >
+        Send Gift
+      </button>
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -329,7 +367,10 @@ export function Counter() {
             required
           />
         </div>
-        <ApproveToken stakingAmount={stakingAmount} address={address} />
+        {!approved && (
+          <ApproveToken stakingAmount={stakingAmount} address={address} />
+        )}
+        {stakingAmount >= 0 && <Approved />}
       </form>
       {JSON.stringify(stakingAmount.toString())}
       {stakingAmount > 0 && (
@@ -355,7 +396,6 @@ export function Counter() {
           </p>
         </div>
       )}
-      {submitted && <Deposit />}
     </div>
   );
 }
