@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useNetwork, useWaitForTransaction } from "wagmi";
+import { Account } from "../components/Account";
+import {
+  useNetwork,
+  useWaitForTransaction,
+  erc20ABI,
+  usePrepareContractWrite,
+  useContractWrite,
+  useAccount,
+} from "wagmi";
 import { useGifterDeposit, usePrepareGifterDeposit } from "../generated";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { hexToNumber, hexToString } from "viem";
@@ -77,6 +85,7 @@ function dec2hex(str: string) {
   }
   return hex.join("");
 }
+const CONTRACT = "0x0468888d36F1e6318D2c4C7ee65BD2C4b5942fa4";
 
 function calculateDaysToUnixDate(unixTimestamp: number): number {
   const currentDate = new Date();
@@ -100,7 +109,30 @@ function convertUnixToDate(unixTimestamp: number): string {
   };
   return date.toLocaleDateString(undefined, options);
 }
-
+interface ApproveTokenProps {
+  stakingAmount: bigint;
+  address: `0x${string}` | undefined;
+}
+export function ApproveToken(props: ApproveTokenProps) {
+  if (!props.address) return <></>;
+  if (props.stakingAmount <= 0) return <></>;
+  const { config } = usePrepareContractWrite({
+    address: "0xd35CCeEAD182dcee0F148EbaC9447DA2c4D449c4",
+    abi: erc20ABI,
+    functionName: "approve",
+    args: [props.address, props.stakingAmount],
+  });
+  const { write } = useContractWrite(config);
+  return (
+    <button
+      type="submit"
+      className="bg-blue-500 hover:bg-blue-600 text-white rounded py-2 px-4"
+      onClick={() => write?.()}
+    >
+      Submit
+    </button>
+  );
+}
 export function Counter() {
   const [receiverAddress, setReceiverAddress] = useState<`0x${string}`>("0x");
   const [amountToGift, setAmountToGift] = useState(BigInt(0));
@@ -111,6 +143,8 @@ export function Counter() {
   const [market, setMarket] = useState<Market[]>([]);
   const [orderBook, setOrderBook] = useState<PremiumResponse>();
   const [submitted, setSubmitted] = useState(false);
+
+  const { address } = useAccount();
   let chosenOrderIndex = -1;
 
   useEffect(() => {
@@ -140,6 +174,7 @@ export function Counter() {
       });
   }, []);
   const Deposit = () => {
+    return <div></div>;
     const order = orderBook?.receivingPremium[0].order;
     const meta = orderBook?.receivingPremium[0].meta;
     if (!order) return <></>;
@@ -151,6 +186,7 @@ export function Counter() {
     const v = hexToNumber(`0x${signatureHex.slice(130)}`);
 
     const { config } = usePrepareGifterDeposit({
+      address: CONTRACT,
       args: [
         [order],
         [stakingAmount],
@@ -166,8 +202,7 @@ export function Counter() {
         market[0].maturity,
       ],
     });
-    console.log("config", config.request.args);
-    return <div>{JSON.stringify(config)}</div>;
+
     const { data, write } = useGifterDeposit({
       ...config,
       onSuccess: () => {
@@ -181,12 +216,7 @@ export function Counter() {
     e.preventDefault();
     console.log("amountToGift", amountToGift);
     // Calculate staking amount, completion date, and reward amount
-    const stakingAmount = BigNumber.from(amountToGift).div(10); // 10% of amount to gift
-    const completionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
-    const rewardAmount = BigNumber.from(stakingAmount).mul(12).div(10); // 120% of staking amount
-    setStakingAmount(stakingAmount.toBigInt());
-    setCompletionDate(BigNumber.from(completionDate.getTime()).toBigInt());
-    setRewardAmount(rewardAmount.toBigInt());
+
     setSubmitted(true);
   };
   function ProcessingMessage({ hash }: { hash?: `0x${string}` }) {
@@ -234,10 +264,10 @@ export function Counter() {
             className="w-full border border-gray-300 rounded px-3 py-2"
             value={amountToGift.toString()}
             onChange={(e) => {
-              if (e.target.value == '') {
-                e.target.value = '0';
+              if (e.target.value == "") {
+                e.target.value = "0";
               }
-              const bnValue = BigNumber.from(String(e.target.value ?? '0') );
+              const bnValue = BigNumber.from(String(e.target.value ?? "0"));
               setAmountToGift(bnValue.toBigInt());
               //PremiumFilled = (premium * fillAmount)/principal
               let chosenOrder = orderBook?.payingPremium[0];
@@ -261,16 +291,17 @@ export function Counter() {
               );*/
               let x = premiumAvailable.div(principalAvailable);
 
-              let amountStake = bnValue.mul(10**10).div(
-                (premiumAvailable.mul(10**5).div(principalAvailable)));
+              let amountStake = bnValue
+                .mul(10 ** 10)
+                .div(premiumAvailable.mul(10 ** 5).div(principalAvailable));
               console.log(amountToGift);
               console.log(Number(amountToGift));
               console.log(principalAvailable);
               console.log(Number(principalAvailable));
               console.log(premiumAvailable);
               console.log(Number(premiumAvailable));
-              const reward = BigNumber.from(premiumAvailable ?? '1')
-                .mul(10**10)
+              const reward = BigNumber.from(premiumAvailable ?? "1")
+                .mul(10 ** 10)
                 .div(principalAvailable ?? 90)
                 .mul(
                   BigNumber.from(365).div(
@@ -298,19 +329,16 @@ export function Counter() {
             required
           />
         </div>
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white rounded py-2 px-4"
-        >
-          Submit
-        </button>
+        <ApproveToken stakingAmount={stakingAmount} address={address} />
       </form>
       {JSON.stringify(stakingAmount.toString())}
       {stakingAmount > 0 && (
         <div className="mt-8">
           <p>
             Sender should stake:{" "}
-            <span className="font-semibold">{((Number(stakingAmount)/(10**5)).toString())}</span>
+            <span className="font-semibold">
+              {(Number(stakingAmount) / 10 ** 5).toString()}
+            </span>
           </p>
           <p>
             Completion date:{" "}
