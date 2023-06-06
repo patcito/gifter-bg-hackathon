@@ -43,8 +43,12 @@ export default function RootLayout({
                 </ul>
               </div>
               <a className="btn btn-ghost normal-case text-xl">Gifter</a>
-              <a className="btn mr-5">🎁 Deposit</a>
-              <a className="btn">💸 Withdraw</a>
+              <a className="btn mr-5" href="/">
+                🎁 Deposit
+              </a>
+              <a className="btn" href="/withdraw">
+                💸 Withdraw
+              </a>
             </div>
             <div className="navbar-end">
               <Connect />

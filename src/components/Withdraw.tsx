@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNetwork, useWaitForTransaction } from "wagmi";
-import { useGifterDeposit, usePrepareGifterDeposit } from "../generated.ts";
+import { useGifterDeposit, usePrepareGifterDeposit } from "../generated.js";
 
 interface Market {
   protocol: number;
@@ -67,7 +67,7 @@ function convertUnixToDate(unixTimestamp: number): string {
   return date.toLocaleDateString(undefined, options);
 }
 
-export function Counter() {
+export function Withdraw() {
   const [receiverAddress, setReceiverAddress] = useState("");
   const [amountToGift, setAmountToGift] = useState("");
   const [stakingAmount, setStakingAmount] = useState(0);
@@ -132,13 +132,12 @@ export function Counter() {
     setStakingAmount(stakingAmount);
     setCompletionDate(completionDate.toDateString());
     setRewardAmount(rewardAmount);
+    deposit();
   };
   function ProcessingMessage({ hash }: { hash?: `0x${string}` }) {
     const { chain } = useNetwork();
     const etherscan = chain?.blockExplorers?.etherscan;
-    const { config } = usePrepareGifterDeposit({
-      args: [],
-    });
+
     return (
       <span>
         Processing transaction...{" "}
