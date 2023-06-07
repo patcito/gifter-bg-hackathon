@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-//import "./Swivel.sol"; // Import the Swivel contract
 
 struct Order {
     bytes32 key;
@@ -38,8 +37,6 @@ interface ISwivel {
         Components[] memory components
     ) external returns (bool);
 }
-
-
 
 contract Gifter {
     using SafeERC20 for IERC20;

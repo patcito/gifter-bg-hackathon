@@ -196,7 +196,6 @@ export function Counter() {
       .then((response) => response.json())
       .then((data: PremiumResponse) => {
         setOrderBook(data);
-        //chosenOrderIndex = findOrderWithHighestPremium(orderBook?.payingPremium)// Test output for order book
         console.log(data.payingPremium[1]);
       })
       .catch((error) => {
@@ -231,7 +230,7 @@ export function Counter() {
       ],
     });
 
-    const { data, write } = useGifterDeposit({
+    const { data, write } = useContractWrite({
       ...config,
       onSuccess: () => {
         console.log(data);
@@ -255,7 +254,6 @@ export function Counter() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("amountToGift", amountToGift);
-    // Calculate staking amount, completion date, and reward amount
 
     setSubmitted(true);
   };
@@ -315,20 +313,10 @@ export function Counter() {
                 chosenOrder?.meta?.premiumAvailable
               );
 
-              console.log("premium", premiumAvailable);
               let principalAvailable = BigNumber.from(
                 chosenOrder?.meta?.principalAvailable
               );
 
-              console.log("principal", principalAvailable);
-              /*alert(
-                "amountStake: " +
-                  bnValue +
-                  " pa: " +
-                  premiumAvailable +
-                  " pra: " +
-                  principalAvailable
-              );*/
               let x = premiumAvailable.div(principalAvailable);
 
               let amountStake = bnValue
